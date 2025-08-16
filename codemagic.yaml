@@ -26,9 +26,9 @@ workflows:
           flutter pub get
           flutter precache --ios
 
-      - name: Generate iOS project files
+      - name: Generate iOS project support files (xcconfig + podhelper.rb)
         script: |
-          flutter build ios --no-sound-null-safety
+          flutter build ios-framework --cocoapods --no-universal
 
       - name: Install CocoaPods
         script: |
