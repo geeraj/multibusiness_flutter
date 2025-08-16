@@ -26,6 +26,15 @@ workflows:
           flutter pub get
           flutter precache --ios
 
+      - name: Check for Generated.xcconfig
+        script: |
+          ls -la ios/Flutter
+          if [ -f ios/Flutter/Generated.xcconfig ]; then
+            echo "✅ Generated.xcconfig exists!"
+          else
+            echo "❌ Generated.xcconfig is missing!"
+          fi
+
       - name: Generate iOS project support files (xcconfig + podhelper.rb)
         script: |
           flutter build ios-framework --cocoapods --no-universal
