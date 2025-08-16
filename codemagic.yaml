@@ -26,9 +26,8 @@ workflows:
           flutter pub get
           flutter precache --ios
 
-      - name: Build iOS app (Release)
-        script: |
-          flutter build ios --release
+          # 👇 this regenerates .ios/Flutter/podhelper.rb
+          flutter build ios --config-only
 
       - name: Set up keychain and certificates
         script: |
