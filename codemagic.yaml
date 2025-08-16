@@ -1,0 +1,61 @@
+workflows:
+  ios-release:
+    name: iOS Release Build
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "com.myapp.shan_exercise3"
+      groups:
+        - appstore_credentials  # Store these in Codemagic "Environment variables"
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Clean and get dependencies
+        script: |
+          flutter clean
+          flutter pub get
+          flutter precache --ios
+
+      - name: Build iOS app (Release)
+        script: |
+          flutter build ios --release
+
+      - name: Set up keychain and certificates
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+
+      - name: Build and sign with Xcode
+        script: |
+          xcode-project build-ipa \
+            --project ios/Runner.xcodeproj \
+            --scheme Runner \
+            --archive-path build/Runner.xcarchive
+
+      - name: Publish to App Store Connect
+        script: |
+          app-store-connect publish \
+            --path "$(find . -name '*.ipa')" \
+            --type IOS \
+            --release-type MANUAL
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_API_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
