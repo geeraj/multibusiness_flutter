@@ -1,12 +1,14 @@
-# Uncomment this line to define a global platform for your project
-platform :ios, '14.0'
+platform :ios, '13.0'
 
 use_frameworks!
 use_modular_headers!
 
+flutter_application_path = '../'
+load File.join(flutter_application_path, 'ios', 'Flutter', 'podhelper.rb')
+
 target 'Runner' do
-  flutter_application_path = '../'
-  eval(File.read(File.join(flutter_application_path, 'ios', 'Flutter', 'podhelper.rb')), binding)
+  flutter_ios_podfile_setup
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
 post_install do |installer|
@@ -17,4 +19,3 @@ post_install do |installer|
     end
   end
 end
-
