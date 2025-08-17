@@ -11,7 +11,8 @@ project 'Runner', {
 }
 
 def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __dir__)
+  # generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __dir__)
+  generated_xcode_build_settings_path = File.expand_path(File.join('Flutter', 'Generated.xcconfig'), __dir__)
 
   unless File.exist?(generated_xcode_build_settings_path)
     puts "⚠️ #{generated_xcode_build_settings_path} not found. Running flutter pub get..."
@@ -30,6 +31,7 @@ def flutter_root
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
 
 flutter_ios_podfile_setup
 
