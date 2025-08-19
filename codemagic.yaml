@@ -68,11 +68,21 @@ workflows:
             --archive-path build/Runner.xcarchive \
             --export-options-plist ios/ExportOptions.plist
 
+      - name: Inspect xcarchive for dSYMs
+        script: |
+          echo "Listing contents of xcarchive..."
+          ls -R build/Runner.xcarchive || echo "⚠️ xcarchive not found"
+
       - name: Export dSYM files
         script: |
           echo "Exporting dSYMs..."
           mkdir -p build/dsyms
-          cp -R build/Runner.xcarchive/dSYMs/* build/dsyms/
+          if [ -d "build/Runner.xcarchive/dSYMs" ]; then
+            ls -la build/Runner.xcarchive/dSYMs
+            cp -R build/Runner.xcarchive/dSYMs/*.dSYM build/dsyms/ || echo "⚠️ No dSYM files found"
+          else
+            echo "⚠️ No dSYMs directory found in xcarchive"
+          fi
           ls -la build/dsyms
 
       - name: Publish to App Store Connect
