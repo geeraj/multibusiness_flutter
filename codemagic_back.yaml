@@ -26,12 +26,6 @@ workflows:
           flutter pub get
           flutter precache --ios
 
-      - name: Ensure iOS minimum deployment target
-        script: |
-          # Force iOS 14.0 (recommended baseline for plugins like google_maps_flutter_ios)
-          sed -i '' 's/platform :ios.*/platform :ios, '\''14.0'\''/g' ios/Podfile
-          cat ios/Podfile | grep "platform :ios"
-
       - name: Check for Generated.xcconfig
         script: |
           ls -la ios/Flutter
@@ -48,7 +42,7 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
-          pod install --repo-update
+          pod install
           cd ..
 
       - name: Set up keychain and certificates
@@ -62,15 +56,7 @@ workflows:
           xcode-project build-ipa \
             --project ios/Runner.xcodeproj \
             --scheme Runner \
-            --archive-path build/Runner.xcarchive \
-            --export-options-plist ios/ExportOptions.plist
-
-      - name: Export dSYM files
-        script: |
-          echo "Exporting dSYMs..."
-          mkdir -p build/dsyms
-          cp -R build/Runner.xcarchive/dSYMs/* build/dsyms/
-          ls -la build/dsyms
+            --archive-path build/Runner.xcarchive
 
       - name: Publish to App Store Connect
         script: |
@@ -82,14 +68,9 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - build/ios/archive/*.xcarchive
-      - build/dsyms/*
 
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_API_KEY
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
-        # Optional: automatically add testers
-        beta_groups:
-          - "Internal Testers"
