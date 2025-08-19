@@ -11,6 +11,9 @@ workflows:
       groups:
         - appstore_credentials
 
+    cache:
+      cache_paths: []   # 🔥 Disable cache completely (forces fresh build each time)
+
     triggering:
       events:
         - push
