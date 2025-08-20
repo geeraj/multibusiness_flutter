@@ -12,7 +12,7 @@ workflows:
         - appstore_credentials
 
     cache:
-      cache_paths: []   # 🔥 Disable cache completely (forces fresh build each time)
+      cache_paths: []   # Disable cache completely (forces fresh build each time)
 
     triggering:
       events:
@@ -31,7 +31,6 @@ workflows:
 
       - name: Ensure iOS minimum deployment target
         script: |
-          # Force iOS 14.0 (recommended baseline for plugins like google_maps_flutter_ios)
           sed -i '' 's/platform :ios.*/platform :ios, '\''14.0'\''/g' ios/Podfile
           cat ios/Podfile | grep "platform :ios"
 
@@ -44,7 +43,7 @@ workflows:
             echo "❌ Generated.xcconfig is missing!"
           fi
 
-      - name: Generate iOS project support files (xcconfig + podhelper.rb)
+      - name: Generate iOS project support files
         script: |
           flutter build ios-framework --cocoapods --no-universal
 
@@ -65,25 +64,32 @@ workflows:
           xcode-project build-ipa \
             --project ios/Runner.xcodeproj \
             --scheme Runner \
-            --archive-path build/Runner.xcarchive \
+            --archive-path build/ios/archive/Runner.xcarchive \
             --export-options-plist ios/ExportOptions.plist
 
       - name: Inspect xcarchive for dSYMs
         script: |
           echo "Listing contents of xcarchive..."
-          ls -R build/Runner.xcarchive || echo "⚠️ xcarchive not found"
+          ls -R build/ios/archive/Runner.xcarchive || echo "⚠️ xcarchive not found"
 
       - name: Export dSYM files
         script: |
           echo "Exporting dSYMs..."
           mkdir -p build/dsyms
-          if [ -d "build/Runner.xcarchive/dSYMs" ]; then
-            ls -la build/Runner.xcarchive/dSYMs
-            cp -R build/Runner.xcarchive/dSYMs/*.dSYM build/dsyms/ || echo "⚠️ No dSYM files found"
+          if [ -d "build/ios/archive/Runner.xcarchive/dSYMs" ]; then
+            ls -la build/ios/archive/Runner.xcarchive/dSYMs
+            cp -R build/ios/archive/Runner.xcarchive/dSYMs/*.dSYM build/dsyms/ || echo "⚠️ No dSYM files found"
           else
             echo "⚠️ No dSYMs directory found in xcarchive"
           fi
           ls -la build/dsyms
+
+      - name: Zip dSYMs
+        script: |
+          if [ -d "build/dsyms" ]; then
+            cd build/dsyms
+            zip -r ../Runner.dSYMs.zip ./*.dSYM
+          fi
 
       - name: Publish to App Store Connect
         script: |
@@ -96,6 +102,7 @@ workflows:
       - build/ios/ipa/*.ipa
       - build/ios/archive/*.xcarchive
       - build/dsyms/*
+      - build/Runner.dSYMs.zip
 
     publishing:
       app_store_connect:
@@ -103,6 +110,5 @@ workflows:
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
-        # Optional: automatically add testers
         beta_groups:
           - "Internal Testers"
